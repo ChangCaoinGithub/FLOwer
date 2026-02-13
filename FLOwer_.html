@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Florian 🌹</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            cursor: crosshair; /* Encourages clicking */
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Hint Text */
+        .hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.2rem;
+            pointer-events: none;
+            animation: fadeOut 3s forwards 1s;
+            z-index: 10;
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+        /* The Popup Window */
+        .card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            display: none; /* Hidden initially */
+            width: 350px;
+            max-width: 90%;
+            border: 2px solid #ff4d4d;
+        }
+
+        h2 {
+            color: #c62828;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+            line-height: 1.4;
+        }
+
+        .btn-container {
+            position: relative;
+            height: 60px; /* Space for buttons */
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* Main "Yes" Button / Re-answer Button */
+        .btn-primary {
+            background-color: #d32f2f;
+            color: white;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+        }
+        .btn-primary:hover {
+            background-color: #b71c1c;
+            transform: scale(1.05);
+        }
+
+        /* Rejection Button */
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Celebration Text */
+        .yay-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 20px #ff0000;
+            display: none;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="hint">Click anywhere to plant flowers 🌹</div>
+    <div class="yay-text" id="celebrationText">See You at Home!</div>
+
+    <!-- The Popup -->
+    <div class="card" id="popup">
+        <h2 id="question">Florian, would you like to be my Valentine? 🌹</h2>
+        <div class="btn-container">
+            <!-- ID names represent their current visual position, logic changes in JS -->
+            <button id="leftBtn" class="btn-primary">Yes</button>
+            <button id="rightBtn" class="btn-secondary">What will happen if I say no?</button>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // --- POPUP LOGIC ---
+        const popup = document.getElementById('popup');
+        const question = document.getElementById('question');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const celebrationText = document.getElementById('celebrationText');
+
+        let state = 'initial'; // 'initial' or 'trap'
+
+        // Show popup after 10 seconds
+        setTimeout(() => {
+            popup.style.display = 'block';
+        }, 10000);
+
+        // Function to handle the "Good" choice (Accepting)
+        function handleAccept() {
+            popup.style.display = 'none';
+            celebrationText.style.display = 'block';
+            startCelebrationMode();
+        }
+
+        // Left Button Click (Initially "Yes", in Trap mode "Yes I am sure")
+        leftBtn.addEventListener('click', () => {
+            if (state === 'initial') {
+                handleAccept();
+            } else if (state === 'trap') {
+                // This code shouldn't be reachable ideally because it runs away
+                alert("Nice try! 😉"); 
+            }
+        });
+
+        // Right Button Click (Initially "No", in Trap mode "Re-answer")
+        rightBtn.addEventListener('click', () => {
+            if (state === 'initial') {
+                // ENTER TRAP MODE
+                state = 'trap';
+                question.innerText = "Are you sure? 🥺";
+                
+                // Swap buttons visually/logically
+                // Left becomes the "Confirmation of Rejection" (The one that runs away)
+                // Right becomes "No, let me re-answer" (The safe one)
+                
+                leftBtn.innerText = "Yes"; // Yes I am sure
+                leftBtn.className = "btn-secondary"; // Make it look grey/sad
+                
+                rightBtn.innerText = "No, I wanna re-answer";
+                rightBtn.className = "btn-primary"; // Make it look inviting
+            } else {
+                // RESET TO INITIAL
+                state = 'initial';
+                question.innerText = "Florian, would you like to be my Valentine? 🌹";
+                
+                // Restore buttons
+                leftBtn.innerText = "Yes";
+                leftBtn.className = "btn-primary";
+                leftBtn.style.position = 'static'; // Reset position if it moved
+                
+                rightBtn.innerText = "No";
+                rightBtn.className = "btn-secondary";
+            }
+        });
+
+        // THE RUNAWAY LOGIC
+        // Specifically for the Left Button when in 'trap' mode
+        leftBtn.addEventListener('mouseover', () => {
+            if (state === 'trap') {
+                const x = Math.random() * (window.innerWidth - 100);
+                const y = Math.random() * (window.innerHeight - 50);
+                
+                leftBtn.style.position = 'fixed';
+                leftBtn.style.left = `${x}px`;
+                leftBtn.style.top = `${y}px`;
+                leftBtn.style.zIndex = 1000;
+            }
+        });
+
+        // --- FLOWER ENGINE ---
+        
+        let flowers = [];
+        const colors = ['#ffb7b2', '#ff9aa2', '#ffdac1', '#e2f0cb', '#b5ead7', '#c7ceea'];
+
+        class Root {
+            constructor(x, y, colorOverride = null) {
+                this.x = x;
+                this.y = y;
+                this.speedX = Math.random() * 4 - 2;
+                this.speedY = Math.random() * -3 - 2;
+                this.maxSize = Math.random() * 7 + 5;
+                this.size = Math.random() * 1 + 2;
+                this.vs = Math.random() * 0.2 + 0.05;
+                this.angleX = Math.random() * 6.2;
+                this.angleY = Math.random() * 6.2;
+                this.lightness = 10;
+                this.color = colorOverride ? colorOverride : colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            update() {
+                this.x += this.speedX + Math.sin(this.angleX);
+                this.y += this.speedY + Math.sin(this.angleY);
+                this.size += this.vs;
+                
+                if (this.lightness < 70) this.lightness += 0.25;
+                
+                if (this.size < this.maxSize) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsl(140, 100%, ${this.lightness}%)`;
+                    ctx.fill();
+                    requestAnimationFrame(this.update.bind(this));
+                } else {
+                    const flower = new Flower(this.x, this.y, this.size, this.color);
+                    flower.grow();
+                }
+            }
+        }
+
+        class Flower {
+            constructor(x, y, size, color) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.color = color;
+            }
+            grow() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = this.color;
+                for (let i = 0; i < 5; i++) {
+                   ctx.beginPath();
+                   ctx.rotate(Math.PI * 2 / 5);
+                   ctx.ellipse(0, this.size, this.size/2, this.size * 1.5, 0, 0, Math.PI * 2);
+                   ctx.fill();
+                }
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size/1.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffeb3b';
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 1. Mouse Click Event (User plants flowers)
+        window.addEventListener('mousedown', (e) => {
+            // Don't plant flowers if clicking popup
+            if (e.target.closest('.card')) return;
+            
+            for(let i=0; i<3; i++){
+                const root = new Root(e.x, e.y);
+                root.update();
+            }
+        });
+
+        // 2. Auto Generation (Background)
+        let autoGen = setInterval(() => {
+            const root = new Root(Math.random() * window.innerWidth, window.innerHeight);
+            root.update();
+        }, 500); // New flower every 0.5 seconds
+
+        // 3. Celebration Mode (Explosion of Red Roses)
+        function startCelebrationMode() {
+            clearInterval(autoGen); // Stop standard flowers
+            
+            // Rapid fire red roses
+            setInterval(() => {
+                for(let i=0; i<5; i++) {
+                    const root = new Root(
+                        Math.random() * window.innerWidth, 
+                        window.innerHeight, 
+                        '#d50000' // Deep Red
+                    );
+                    root.update();
+                }
+            }, 100);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+    </script>
+</body>
+</html>
